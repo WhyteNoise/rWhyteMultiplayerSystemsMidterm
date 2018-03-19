@@ -18,10 +18,12 @@ public:
 	bool alive = true;
 
 	int healVal;
+	int attack;
+	int health;
 
 	void Damage(int value);
 
-	std::string GetName();
+	std::string GetName() const;
 
 	void SetName(std::string value);
 
@@ -47,10 +49,6 @@ private:
 
 	std::string userName;
 
-	RakNet::SystemAddress address;
-
-	int health;
-
-	int attack;	
+	RakNet::SystemAddress address;	
 };
 

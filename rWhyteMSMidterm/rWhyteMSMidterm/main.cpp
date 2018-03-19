@@ -398,86 +398,80 @@ void PacketHandler()
 				unsigned char packetID = GetPacketIdentifier(packet);
 				switch (packetID)
 				{
-					case ID_THEGAME_LOBBY:
+					case ID_THEGAME_LOBBY: // Done
 					{
 						RakNet::BitStream myStream(packet->data, packet->length, false);
 						RakNet::MessageID messageID;
 						myStream.Read(messageID);
 						std::string userName;
 						myStream.Read(userName);
-						std::cout << userName << " has Joined the Game " << std::endl;
+						std::cout << userName << " Joined the Fight! " << std::endl;
 					}
 						break;
-					case ID_ADD_USER:
+					case ID_ADD_USER: // Done
 					{
 						RakNet::BitStream myStream(packet->data, packet->length, false);
 						RakNet::MessageID messageID;
 						myStream.Read(messageID);
 						RakNet::SystemAddress sysAddress;
 						myStream.Read(sysAddress);
-						RakNet::RakString str;
-						myStream.Read(str);
+						std::string test;
+						myStream.Read(test);
 						PlayerChar::ClassType playerClass;
 						myStream.Read(playerClass);
 						int ID;
 						myStream.Read(ID);
-						auto temp = new PlayerChar(std::string(str), playerClass, ID);
-						temp->SetAddress(sysAddress);
-						playerChars.push_back(*temp);
-						std::cout << "Added player: " << temp->GetName() << ". Type is: " << ToString(temp->GetClassType()) << ". Player's length is: " << playerChars.size() << std::endl;
-						RakNet::BitStream bs;
+						PlayerChar holder = PlayerChar(test, playerClass, ID);
+						std::cout << "New player: " << holder.GetName() << "\nType is: " << ToString(playerClass) << "\nNumber of Players: " << playerChars.size() << std::endl;
 					}
 						break;
-					case ID_EXISTING:
+					case ID_EXISTING: // Done
 					{
 						std::cout << "Name Already Exists; Please Try a New Name\n ";
 					}
 						break;
-					case ID_CREATED:
+					case ID_CREATED: // Done
 					{
 						printf("Created player.\n");
 						playersSuccessfullyCreated[g_rakPeerInterface->GetIndexFromSystemAddress(g_clientAddress)] = true;
 						std::cout << "Type ready to begin game." << std::endl;
 					}
 						break;
-					case ID_CHECK_NAME:
+					case ID_CHECK_NAME: // Done
 					{
 						RakNet::BitStream myBitStream(packet->data, packet->length, false);
 						RakNet::MessageID messageID;
 						myBitStream.Read(messageID);
 						RakNet::SystemAddress sysAddress;
 						myBitStream.Read(sysAddress);
-						RakNet::RakString str;
-						myBitStream.Read(str);
+						std::string test;
+						myBitStream.Read(test);
 
-						auto it = find_if(playerChars.begin(), playerChars.end(), [&str](const PlayerChar& obj) { return obj.GetName == std::string(str); });
+						RakNet::BitStream bitStream;
 
-						if (it != playerChars.end()) 
+						for each (PlayerChar player in playerChars)
 						{
-							RakNet::BitStream bs; 
-							bs.Write((RakNet::MessageID)ID_EXISTING);
-							g_rakPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, sysAddress, false);
+							if (player.GetName() == test)
+							{								
+								bitStream.Write((RakNet::MessageID)ID_EXISTING);
+							}
 						}
-						else
-						{
-							RakNet::BitStream bs; 
-							bs.Write((RakNet::MessageID)ID_IS_AVAILABLE);
-							bs.Write(bool(true));
-							g_rakPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, sysAddress, false);
-							std::cout << "player checking name" << std::endl;
-						}
+
+						bitStream.Write((RakNet::MessageID)ID_IS_AVAILABLE);
+						bitStream.Write(bool(true));
+						g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, sysAddress, false);
 					}
 						break;
-					case ID_IS_AVAILABLE:
+					case ID_IS_AVAILABLE: // Done
 					{
 						std::cout << "User Name Okay" << std::endl;
 						availName = true;
 					}
 						break;
-					case ID_READY:
+					case ID_READY: // Done
 					{
 						++numReady;
-						std::cout << "packet recieved. Number of player: " << numReady << " number of  connections: " << g_rakPeerInterface->NumberOfConnections() << std::endl;
+						std::cout << "Number of players: " << numReady << " number of  connections: " << g_rakPeerInterface->NumberOfConnections() << std::endl;
 						if (numReady == g_rakPeerInterface->NumberOfConnections())
 						{
 							++currentID;
@@ -507,23 +501,21 @@ void PacketHandler()
 						}
 					}
 						break;
-					case ID_START:
+					case ID_START: // Done
 					{
 						RakNet::BitStream myBitStream(packet->data, packet->length, false);
 						RakNet::MessageID m_ID;
 						myBitStream.Read(m_ID);
-						RakNet::RakString str;
-						myBitStream.Read(str);
-						std::cout << str;
+						std::cout << playerChars[m_ID].userID;
 						playing = true;
 					}
 						break;
-					case ID_STAT:
+					case ID_STAT: // Done
 					{
 
 					}
 						break;
-					case ID_ALL_STAT:
+					case ID_ALL_STAT: // Done
 					{
 						RakNet::BitStream myStream(packet->data, packet->length, false);
 						RakNet::MessageID m_ID;
@@ -543,174 +535,152 @@ void PacketHandler()
 						g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, address, false);
 					}
 						break;
-					case ID_MESSAGE:
+					case ID_MESSAGE: // Done
 					{
 						RakNet::BitStream myStream(packet->data, packet->length, false);
 						RakNet::MessageID messageID;
 						myStream.Read(messageID);
-						RakNet::RakString str;
-						myStream.Read(str);
-						std::cout << str << std::endl;
+						std::string test;
+						myStream.Read(test);
+						std::cout << test << std::endl;
 					}
 						break;
-					case ID_HEAL:
+					case ID_HEAL: // Done
 					{
 						RakNet::BitStream myStream(packet->data, packet->length, false);
 						RakNet::MessageID messageID;
 						myStream.Read(messageID);
-						int _playerID;
-						myStream.Read(_playerID);
-						if (_playerID == currentID)
+						int playerID;
+						myStream.Read(playerID);
+
+						if (playerID == currentID)
 						{
-							RakNet::SystemAddress addr(packet->systemAddress);
-							auto it = find_if(playerChars.begin(), playerChars.end(), [&addr](const PlayerChar& obj) { return obj.GetAddress == addr; });
-
-							if (it != playerChars.end()) //if the player was found, heal them
-							{
-								std::cout << "Player found. Name is: " << it->GetName() << std::endl;
-								it->HealSelf();
-
-								RakNet::BitStream bitStream;
-								bitStream.Write(RakNet::MessageID(ID_MESSAGE));
-								RakNet::RakString str;
-								str += "Healed for ";
-								str += std::to_string(it->healVal).data();
-								str += ". ";
-								str += "Current health is: ";
-								str += std::to_string(it->GetHealth()).data();
-								bitStream.Write(str);
-								g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-								currentID = (currentID + 1) % g_rakPeerInterface->NumberOfConnections();
-								RakNet::BitStream messageBs;
-								messageBs.Write(RakNet::MessageID(ID_MESSAGE));
-								messageBs.Write(RakNet::RakString("It is now %s's turn!", playerChars[currentID].GetName().data()));
-								g_rakPeerInterface->Send(&messageBs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
-							}
+							playerChars[currentID].HealSelf();
 						}
 						else
 						{
-							RakNet::BitStream bitStream;
-							bitStream.Write(RakNet::MessageID(ID_MESSAGE));
-							bitStream.Write(RakNet::RakString("Command failed. It is not your turn!"));
-							g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+							std::cout << "It is not your turn!" << std::endl;
 						}
 					}
 						break;
-					case ID_ATTACK:
+					case ID_ATTACK: // Done
 					{
-						RakNet::BitStream thisBitStream(packet->data, packet->length, false);
+						RakNet::BitStream myStream(packet->data, packet->length, false);
 						RakNet::MessageID messageID;
-						thisBitStream.Read(messageID);
+						myStream.Read(messageID);
 						int attackingID;
-						thisBitStream.Read(attackingID);
-						RakNet::RakString attackedName;
-						thisBitStream.Read(attackedName);
+						myStream.Read(attackingID);
+						std::string attackedName;
+						myStream.Read(attackedName);
 
-						if (attackingID == currentID && playerChars[attackingID].GetName().data() != std::string(attackedName))
+						if (attackingID == currentID && playerChars[attackingID].GetName() != attackedName)
 						{
-
-							auto it = find_if(playerChars.begin(), playerChars.end(), [&attackedName](const PlayerChar& obj) { return obj.GetName == std::string(attackedName); });
-
-							if (it != playerChars.end())
+							for each (PlayerChar player in playerChars)
 							{
-								it->Damage(playerChars[attackingID].GetPower());
-
-								if (it->GetHealth() <= 0)
+								if (player.GetName() == attackedName) 
 								{
-									RakNet::BitStream bitStream;
-									bitStream.Write(RakNet::MessageID(ID_MESSAGE));
-									bitStream.Write(RakNet::RakString("%s has died! They were killed by %s", it->GetName().data(), playerChars[attackingID].GetName().data()));
-									g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+									player.Damage(playerChars[attackingID].attack);
 
-									it->alive = false;
-									g_rakPeerInterface->CloseConnection(it->GetAddress(), true, 0);
-									if (it == playerChars.begin())
+									if (player.GetHealth() <= 0)
 									{
-										playerChars.erase(playerChars.begin());
-									}
-									else
-									{
-										playerChars.erase(it--);
-									}
-
-									int itr = -1;
-									for each (PlayerChar player in playerChars)
-									{
-										++itr;
 										RakNet::BitStream bitStream;
-										bitStream.Write(RakNet::MessageID(ID_GET_ID));
-										bitStream.Write(int(itr));
-										playerChars[itr].userID = itr;
-										g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, player.GetAddress(), false);
-									}
-									if (playerChars.size() > 1)
-									{
-										currentID = (currentID + 1) % g_rakPeerInterface->NumberOfConnections();
-										RakNet::BitStream messageBs;
-										messageBs.Write(RakNet::MessageID(ID_MESSAGE));
-										messageBs.Write(RakNet::RakString("It is now %s's turn!", playerChars[currentID].GetName().data()));
-										g_rakPeerInterface->Send(&messageBs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+										bitStream.Write(RakNet::MessageID(ID_MESSAGE));
+										bitStream.Write(std::cout << player.GetName() << " has Died! \nThey were killed by: " << playerChars[attackingID].GetName());
+										g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
 
+										player.alive = false;
+
+										g_rakPeerInterface->CloseConnection(player.GetAddress(), true, 0);
+										
+										auto it = find_if(playerChars.begin(), playerChars.end(), [&attackedName](const PlayerChar &obj) { return obj.GetName() == std::string(attackedName); });
+
+										if (it == playerChars.begin())
+										{
+											playerChars.erase(playerChars.begin());
+										}
+										else
+										{
+											playerChars.erase(it--);
+										}
+
+										int counter = -1;
+										for each (PlayerChar player in playerChars)
+										{
+											counter = counter++;
+											RakNet::BitStream bitStream;
+											bitStream.Write(RakNet::MessageID(ID_GET_ID));
+											bitStream.Write(int(counter));
+											playerChars[counter].userID = counter;
+											g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, player.GetAddress(), false);
+										}
+										if (playerChars.size() > 1)
+										{
+											currentID = (currentID + 1) % g_rakPeerInterface->NumberOfConnections();
+											RakNet::BitStream bitStream;
+											bitStream.Write(RakNet::MessageID(ID_MESSAGE));
+											bitStream.Write(std::cout << "It is now " << playerChars[currentID].GetName()<< "'s turn!");
+											g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+
+										}
+										else
+										{
+											RakNet::BitStream bitStream;
+											bitStream.Write(RakNet::MessageID(ID_MESSAGE));
+											bitStream.Write(RakNet::RakString("Battle Over! \nYou Reign Supreme!"));
+											g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+											g_rakPeerInterface->CloseConnection(playerChars[0].GetAddress(), true, 0);
+										}
 									}
 									else
 									{
-										RakNet::BitStream messageBs;
-										messageBs.Write(RakNet::MessageID(ID_MESSAGE));
-										messageBs.Write(RakNet::RakString("You've won! Congratulations!"));
-										g_rakPeerInterface->Send(&messageBs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
-										g_rakPeerInterface->CloseConnection(playerChars[0].GetAddress(), true, 0);
+										RakNet::BitStream bitStream;
+										bitStream.Write(RakNet::MessageID(ID_MESSAGE));
+										bitStream.Write(std::cout << player.GetName() << " was assaulted by " << playerChars[attackingID].GetName() << "\nTheir Health Remaining is: " << player.GetHealth());
+										g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+										currentID = (currentID + 1) % g_rakPeerInterface->NumberOfConnections();									
+										bitStream.Write(RakNet::MessageID(ID_MESSAGE));
+										bitStream.Write(std::cout << "It is now " << playerChars[currentID].GetName() << "'s turn!");
+										g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
 									}
-								}
+								} 
+								// Attack Was Successful
 								else
 								{
 									RakNet::BitStream bitStream;
 									bitStream.Write(RakNet::MessageID(ID_MESSAGE));
-									bitStream.Write(RakNet::RakString("%s was attacked by %s. Their health is now: %i", it->GetName().data(), playerChars[attackingID].GetName().data(), it->GetHealth()));
-									g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
-									currentID = (currentID + 1) % g_rakPeerInterface->NumberOfConnections();
-									RakNet::BitStream messageBs;
-									messageBs.Write(RakNet::MessageID(ID_MESSAGE));
-									messageBs.Write(RakNet::RakString("It is now %s's turn!", playerChars[currentID].GetName().data()));
-									g_rakPeerInterface->Send(&messageBs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+									bitStream.Write(std::cout << "You Swing At Nothing. \nTry again." << std::endl);
+									g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 								}
-
-							}
-							else
-							{
-								RakNet::BitStream bitStream;
-								bitStream.Write(RakNet::MessageID(ID_MESSAGE));
-								RakNet::RakString str("Player not found.Please try again");
-								bitStream.Write(str);
-								g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+								// Attack was at non-existent player
 							}
 						}
-						else if (playerChars[attackingID].GetName().data() == std::string(attackedName) && attackingID == currentID)
+						else if (attackingID == currentID && playerChars[attackingID].GetName() == attackedName)
 						{
 							RakNet::BitStream bitStream;
 							bitStream.Write(RakNet::MessageID(ID_MESSAGE));
-							bitStream.Write(RakNet::RakString("You can't attack yourself!"));
+							bitStream.Write(std::cout << "You try to end your fight early. \nIt does not work. \nTry again." << std::endl);
 							g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-						}
+						} // Attack yourself fails
 						else
 						{
 							RakNet::BitStream bitStream;
 							bitStream.Write(RakNet::MessageID(ID_MESSAGE));
-							bitStream.Write(RakNet::RakString("Command failed. It is not your turn!"));
+							bitStream.Write(std::cout << "It is not your turn. \nDexterity is nothing to joke about." << std::endl);
 							g_rakPeerInterface->Send(&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-						}
+						} // Attack out of order
 					}
 						break;
-					case ID_GET_ID:
+					case ID_GET_ID: // Done
 					{
-						RakNet::BitStream thisBitStream(packet->data, packet->length, false);
+						RakNet::BitStream bitStream(packet->data, packet->length, false);
 						RakNet::MessageID messageID;
-						thisBitStream.Read(messageID);
+						bitStream.Read(messageID);
 						int ID;
-						thisBitStream.Read(ID);
+						bitStream.Read(ID);
 						IDs = ID;
 					}
 						break;
-					case ID_QUIT:
+					case ID_QUIT: // Done
 					{
 						RakNet::BitStream thisBitStream(packet->data, packet->length, false);
 						g_rakPeerInterface->CloseConnection(packet->systemAddress, true, 0);					

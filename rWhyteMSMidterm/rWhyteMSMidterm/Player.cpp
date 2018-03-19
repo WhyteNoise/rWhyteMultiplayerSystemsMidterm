@@ -67,7 +67,7 @@ void PlayerChar::Damage(int value)
 	health = health - value;
 }
 
-std::string PlayerChar::GetName()
+std::string PlayerChar::GetName() const
 {
 	return userName;
 }
